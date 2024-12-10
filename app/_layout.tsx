@@ -2,6 +2,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import WelcomePage from './index'; // WelcomePage (index.tsx)
 import SecondPage from './secondPage'; // SecondPage
 import ThirdPage from './thirdPage'; // ThirdPage
+import FourthPage from './fourthPage'; // FourthPage
 import { RootStackParamList } from './types'; // Import navigation types
 
 // Create the stack navigator with RootStackParamList
@@ -24,6 +25,11 @@ export default function Layout() {
         name="ThirdPage" 
         component={ThirdPage} 
         options={{ title: 'Third Page' }} // Optionally set header title
+      />
+      <Stack.Screen 
+        name="FourthPage" 
+        component={FourthPage} 
+        options={{ title: 'Fourth Page' }} // Optionally set header title
       />
     </Stack.Navigator>
   );

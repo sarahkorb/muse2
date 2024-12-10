@@ -1,10 +1,15 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "strict": true,
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@env": [
+        "./react-native-dotenv.d.ts"
       ]
     }
   },
@@ -12,6 +17,8 @@
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "expo-env.d.ts",
+    "react-native-dotenv.d.ts",
+    "src/**/*"
   ]
 }
