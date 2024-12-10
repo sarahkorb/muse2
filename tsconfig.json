@@ -3,6 +3,7 @@
   "compilerOptions": {
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "typeRoots": ["./node_modules/@types", "./"],
     "strict": true,
     "paths": {
       "@/*": [

@@ -4,11 +4,9 @@ import { useFonts, PlayfairDisplay_400Regular } from '@expo-google-fonts/playfai
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from './types';
 import axios from 'axios';
+import { GOOGLE_API_KEY, GOOGLE_CX } from 'react-native-dotenv';
 
 type FourthPageRouteProp = RouteProp<RootStackParamList, 'FourthPage'>;
-
-const GOOGLE_API_KEY = 'AIzaSyCWhB6WAaGXUdK5LNhvoVV9BAOiIMEer-Y';  // Replace with your actual API key
-const GOOGLE_CX = 'd502b619bf1754ba7'; // Replace with your custom search engine ID
 
 interface FourthPageProps {
   route: FourthPageRouteProp;
