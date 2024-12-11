@@ -1,73 +1,159 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
+import { RouteProp } from '@react-navigation/native';
+import { RootStackParamList } from './types';  // Import the updated types
+import { BarChart } from 'react-native-chart-kit';
+import { Dimensions } from 'react-native';
 
-export default function SixthPage({ route }) {
-    // Extract images, habit, and songs from route params
+type SixthPageRouteProp = RouteProp<RootStackParamList, 'SixthPage'>;
+
+interface SixthPageProps {
+    route: SixthPageRouteProp;
+}
+
+const screenWidth = Dimensions.get('window').width;
+
+export default function SixthPage({ route }: SixthPageProps) {
     const { images, habit, selectedSongs } = route.params;
 
-    const streakCount = 5; // Example streak count
+    // Streak counter state and weekly log state
+    const [streak, setStreak] = useState<number>(0);
+    const [habitLogged, setHabitLogged] = useState<boolean>(false);
+
+    // Simulate a week's habit logs, where 1 means the habit is done, 0 means not done.
+    const [weekLogs, setWeekLogs] = useState<number[]>(new Array(7).fill(0));  // Default to no habit logged for any day
     
-    // Mock data for song images (in a real scenario, you might pass image URLs with the songs)
-    const songImages = {
-        'Song 1': 'https://example.com/song1.jpg',
-        'Song 2': 'https://example.com/song2.jpg',
-        'Song 3': 'https://example.com/song3.jpg',
-        'Song 4': 'https://example.com/song4.jpg',
+    // Handle logging the habit
+    const handleLogHabit = () => {
+        if (!habitLogged) {
+            const newStreak = streak + 1;
+            setStreak(newStreak);
+
+            // Update the weekLogs with the current day's streak
+            const currentDay = new Date().getDay(); // Get the current day of the week (0-6)
+            const updatedWeekLogs = [...weekLogs];
+            updatedWeekLogs[currentDay] = 1;  // Mark the current day as habit done (1)
+            setWeekLogs(updatedWeekLogs);
+
+            setHabitLogged(true);
+        }
     };
 
-    // State for the current image index for moodboard
-    const [currentIndex, setCurrentIndex] = useState(0);
+    // Reset streak at the start of a new week (example: every 7 days)
+    const handleResetStreak = () => {
+        setStreak(0);
+        setHabitLogged(false);
+        setWeekLogs(new Array(7).fill(0));  // Reset the logs for the new week
+    };
+    const chartConfig = {
+        backgroundColor: '#f5efe6',
+        backgroundGradientFrom: '#f5efe6',
+        backgroundGradientTo: '#f5efe6',
+        decimalPlaces: 1, // No decimal places
+        color: (opacity = 1) => `rgba(27, 163, 112, ${opacity})`, // Green for bars
+        labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`, // Black for labels
+        style: {
+            borderRadius: 10, // Slightly rounded edges for the chart container
+        },
+        barPercentage: 0.6, // Slightly narrower bars
+        useShadowColorFromDataset: false, // Removes shadow effect
+    };
 
-    // Change image every 3 seconds
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
-        }, 3000); // 3000ms = 3 seconds
-
-        // Clean up the interval when the component unmounts
-        return () => clearInterval(interval);
-    }, [images.length]);
+    const chartData = {
+        labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+        datasets: [
+            {
+                data: weekLogs,
+                color: (opacity = 1) => `rgba(75, 192, 192, ${opacity})`, // Cyan bars
+                strokeWidth: 2, // Moderate bar thickness
+            },
+        ],
+    };
 
     return (
         <View style={styles.container}>
-            {/* Habit Title */}
             <Text style={styles.title}>{habit}</Text>
 
-            <View style={styles.mainContent}>
-                {/* Moodboard with Rotating Images */}
-                <View style={styles.moodboard}>
-                    <Image
-                        source={{ uri: images[currentIndex] }}
-                        style={styles.image}
-                        resizeMode="contain"
+            <View style={styles.contentContainer}>
+                {/* Left side for images */}
+                <View style={styles.imagesContainer}>
+                    <Text style={styles.subtitle}>Inspo Images:</Text>
+                    <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
+                        {images.length > 0 ? (
+                            images.map((image, index) => (
+                                <Image
+                                    key={index}
+                                    source={{ uri: image }}
+                                    style={styles.image}
+                                />
+                            ))
+                        ) : (
+                            <Text style={styles.text}>No images found.</Text>
+                        )}
+                    </ScrollView>
+                </View>
+
+                {/* Right side for songs */}
+                <View style={styles.songsContainer}>
+                    <Text style={styles.subtitle}>Songs for your Habit:</Text>
+                    <ScrollView>
+                        {selectedSongs.length > 0 ? (
+                            selectedSongs.map((song, index) => (
+                                <View key={index} style={styles.songContainer}>
+                                    <Text style={styles.song}>
+                                        {song.songName} by {song.artistName}
+                                    </Text>
+                                </View>
+                            ))
+                        ) : (
+                            <Text style={styles.text}>No songs selected.</Text>
+                        )}
+                    </ScrollView>
+                </View>
+            </View>
+
+            {/* Weekly Dashboard Section */}
+            <View style={styles.dashboardContainer}>
+                <Text style={styles.dashboardTitle}>Your Weekly Habit Dashboard</Text>
+                <View style={styles.streakContainer}>
+                    <Text style={styles.streakText}>
+                        Streak: {streak} {streak === 1 ? 'day' : 'days'}
+                    </Text>
+                    <TouchableOpacity
+                        style={styles.logButton}
+                        onPress={handleLogHabit}
+                        disabled={habitLogged}
+                    >
+                        <Text style={styles.logButtonText}>
+                            {habitLogged ? 'Habit Logged Today' : 'Log Habit for Today'}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Bar Chart */}
+                <View style={styles.chartContainer}>
+                    <BarChart
+                        data={chartData}
+                        width={screenWidth - 40}
+                        height={220}
+                        chartConfig={chartConfig}
+                        yAxisLabel=""
+                        yAxisSuffix=""
+                        yAxisInterval={1} // Use steps of 1 for better readability
+                        fromZero={true} // Start the Y-axis at 0
+                        style={{
+                            marginVertical: 10,
+                            borderRadius: 10,
+                        }}
                     />
                 </View>
 
-                {/* Playlist Scrollable on the Right */}
-                <ScrollView
-                    contentContainerStyle={styles.playlist}
-                    showsVerticalScrollIndicator={false}
+                <TouchableOpacity
+                    style={styles.resetButton}
+                    onPress={handleResetStreak}
                 >
-                    {selectedSongs.map((songName, index) => (
-                        <View key={index} style={styles.track}>
-                            {/* Display image for the song */}
-                            <Image
-                                source={{ uri: songImages[songName] }}
-                                style={styles.songImage}
-                                resizeMode="contain"
-                            />
-                            <View style={styles.songDetails}>
-                                <Text style={styles.songName}>{songName}</Text>
-                                <Text style={styles.artistName}>{`Artist ${index + 1}`}</Text>
-                            </View>
-                        </View>
-                    ))}
-                </ScrollView>
-            </View>
-
-            {/* Streak Counter at the Bottom */}
-            <View style={styles.streakContainer}>
-                <Text style={styles.streakText}>Streak: {streakCount} days</Text>
+                    <Text style={styles.resetButtonText}>Reset Streak</Text>
+                </TouchableOpacity>
             </View>
         </View>
     );
@@ -76,69 +162,122 @@ export default function SixthPage({ route }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        justifyContent: 'flex-start',
+        alignItems: 'center',
         backgroundColor: '#f5efe6',
         padding: 20,
     },
     title: {
-        fontSize: 28,
+        fontSize: 22,
         fontWeight: 'bold',
         textAlign: 'center',
         marginBottom: 20,
+        fontFamily: 'PlayfairDisplay_400Regular',
     },
-    mainContent: {
+    contentContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 20,
+        width: '100%',
     },
-    moodboard: {
-        flex: 1, // Allow the container to grow
+    imagesContainer: {
+        flex: 1,
+        marginRight: 20,
         alignItems: 'center',
-        justifyContent: 'center',
-        width: '100%', // Take full width of the screen
-        aspectRatio: 1.5, // Adjust this based on your image's natural aspect ratio (e.g., 1.5 for 3:2)
-        marginBottom: 20, // Optional spacing
     },
-    image: {
-        width: '100%', // Image will scale to fit the container
-        height: '100%', // Preserve height relative to container
-        borderRadius: 10, // Optional for rounded corners
-        resizeMode: 'contain', // Ensures the full image is visible
-    },
-    playlist: {
-        paddingLeft: 10,
-        paddingRight: 10,
-        width: '45%',
-    },
-    track: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 15,
-    },
-    songImage: {
-        width: 50,
-        height: 50,
-        borderRadius: 5,
-        marginRight: 10,
-    },
-    songDetails: {
-        flexDirection: 'column',
-    },
-    songName: {
+    imagesContainerTitle: {
         fontSize: 18,
         fontWeight: 'bold',
+        marginBottom: 10,
+        fontFamily: 'PlayfairDisplay_400Regular',
     },
-    artistName: {
-        fontSize: 14,
-        fontStyle: 'italic',
-        color: '#888',
+    image: {
+        width: 150,
+        height: 150,
+        marginRight: 10,
+        borderRadius: 10,
+    },
+    songsContainer: {
+        flex: 1,
+        alignItems: 'flex-start',
+        marginTop: 20,
+    },
+    songContainer: {
+        marginBottom: 10,
+    },
+    song: {
+        fontSize: 16,
+        color: '#333',
+        fontFamily: 'PlayfairDisplay_400Regular',
+    },
+    subtitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        fontFamily: 'PlayfairDisplay_400Regular',
+    },
+    text: {
+        fontSize: 18,
+        color: '#333',
+        textAlign: 'center',
+        fontFamily: 'PlayfairDisplay_400Regular',
+    },
+    dashboardContainer: {
+        marginTop: 30,
+        padding: 15,
+        backgroundColor: '#f5efe6',
+        borderRadius: 10,
+        width: '100%',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.8,
+        shadowRadius: 2,
+    },
+    dashboardTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        fontFamily: 'PlayfairDisplay_400Regular',
     },
     streakContainer: {
-        paddingTop: 20,
         alignItems: 'center',
+        marginBottom: 20,
     },
     streakText: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#333',
+        marginBottom: 10,
+        fontFamily: 'PlayfairDisplay_400Regular',
+    },
+    logButton: {
+        backgroundColor: '#1DB954',
+        padding: 10,
+        borderRadius: 5,
+        marginBottom: 10,
+    },
+    logButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+        fontFamily: 'PlayfairDisplay_400Regular',
+    },
+    chartContainer: {
+        marginTop: 20,
+        marginBottom: 20,
+    },
+    chart: {
+        marginVertical: 10,
+        borderRadius: 16,
+    },
+    resetButton: {
+        backgroundColor: '#f44336',
+        padding: 10,
+        borderRadius: 5,
+    },
+    resetButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+        fontFamily: 'PlayfairDisplay_400Regular',
     },
 });

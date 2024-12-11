@@ -24,7 +24,7 @@ interface FifthPageProps {
 export default function FifthPage({ route }: FifthPageProps) {
   const { habit, selectedImages } = route.params; // Receive the habit from the route params
   const [songs, setSongs] = useState<any[]>([]); // Store song details (name, artist, id)
-  const [selectedSongs, setSelectedSongs] = useState<string[]>([]); // Store selected songs
+  const [selectedSongs, setSelectedSongs] = useState<{ id: string; songName: string; artistName: string }[]>([]);
   const [fontsLoaded] = useFonts({
     PlayfairDisplay_400Regular,
   });
@@ -34,7 +34,7 @@ export default function FifthPage({ route }: FifthPageProps) {
     navigation.navigate('SixthPage', {
       images: selectedImages, // Pass the images
       habit: habit,           // Pass the habit
-      selectedSongs: selectedSongs, // Pass the selected songs
+      selectedSongs: selectedSongs, // Pass the selected songs with full details
     });
   };
   
@@ -143,16 +143,18 @@ export default function FifthPage({ route }: FifthPageProps) {
     return null; // Ensure fonts are loaded before rendering
   }
 
-  const handleSongSelection = (songId: string) => {
-    setSelectedSongs(prevSelected => {
-      if (prevSelected.includes(songId)) {
-        return prevSelected.filter(id => id !== songId); // Remove song from selection
+  const handleSongSelection = (song: { id: string; songName: string; artistName: string }) => {
+    setSelectedSongs((prevSelected) => {
+      if (prevSelected.find((selected) => selected.id === song.id)) {
+        // Remove song if it's already selected
+        return prevSelected.filter((selected) => selected.id !== song.id);
       } else {
-        return [...prevSelected, songId]; // Add song to selection
+        // Add song if it's not already selected
+        return [...prevSelected, song];
       }
     });
   };
-
+  
   const handleSpotifyLink = () => {
     Linking.openURL('https://www.spotify.com'); // Open Spotify link
   };
@@ -164,13 +166,13 @@ export default function FifthPage({ route }: FifthPageProps) {
         <View style={styles.songsContainer}>
           {songs.map((track, index) => (
             <View key={index} style={styles.songContainer}>
-              <TouchableOpacity onPress={() => handleSongSelection(track.id)}>
+              <TouchableOpacity onPress={() => handleSongSelection(track)}>
                 <Text style={styles.song}>
                   {track.songName} by {track.artistName}
                 </Text>
                 <Checkbox
-                  value={selectedSongs.includes(track.id)}
-                  onValueChange={() => handleSongSelection(track.id)} // Handle toggle
+                  value={selectedSongs.some((selected) => selected.id === track.id)}
+                  onValueChange={() => handleSongSelection(track)} // Handle toggle
                 />
               </TouchableOpacity>
             </View>
@@ -186,7 +188,7 @@ export default function FifthPage({ route }: FifthPageProps) {
         </Text>{' '}
         account to listen to these songs.
       </Text>
-
+  
       <TouchableOpacity style={styles.arrowButton} onPress={goToSixthPage}>
         <Animated.View style={styles.arrowContainer}>
           <Text style={styles.arrow}>→</Text>
@@ -195,7 +197,7 @@ export default function FifthPage({ route }: FifthPageProps) {
       </TouchableOpacity>
     </View>
   );
-}
+}  
 
 const styles = StyleSheet.create({
   container: {
