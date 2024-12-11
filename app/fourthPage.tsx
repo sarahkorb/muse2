@@ -1,54 +1,84 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Linking } from 'react-native';
+import { Animated, View, Text, StyleSheet, Image, TouchableOpacity, Linking, Button } from 'react-native';
 import { useFonts, PlayfairDisplay_400Regular } from '@expo-google-fonts/playfair-display';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from './types';
 import axios from 'axios';
-import { GOOGLE_API_KEY, GOOGLE_CX } from 'react-native-dotenv';
+import { useNavigation } from '@react-navigation/native'; 
+import { StackNavigationProp } from '@react-navigation/stack'; 
+import * as ImagePicker from 'expo-image-picker'; 
+
+const googleapikey = process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
+const googlecx = process.env.EXPO_PUBLIC_GOOGLE_CX;
 
 type FourthPageRouteProp = RouteProp<RootStackParamList, 'FourthPage'>;
+type FourthPageNavigationProp = StackNavigationProp<RootStackParamList, 'FourthPage'>;
 
 interface FourthPageProps {
   route: FourthPageRouteProp;
 }
 
 export default function FourthPage({ route }: FourthPageProps) {
-  const { habit } = route.params;  // Receive the habit from the route params
-  const [images, setImages] = useState<string[]>([]);  // Store image URLs here
-  const [fontsLoaded] = useFonts({
-    PlayfairDisplay_400Regular,
-  });
+  const { habit } = route.params; // Receive the habit from route params
+  const [images, setImages] = useState<string[]>([]); // Store fetched image URLs
+  const [selectedImages, setSelectedImages] = useState<string[]>([]); // Track selected images
+  const [fontsLoaded] = useFonts({ PlayfairDisplay_400Regular });
+  const navigation = useNavigation<FourthPageNavigationProp>();
 
   const fetchImages = async () => {
-    if (!habit) return; // Return early if habit is not available
+    if (!habit) return;
 
-    const searchTerm = `${habit} inspiration`;  // Combine habit with "inspiration"
+    const searchTerm = `${habit} inspiration`; // Combine habit with "inspiration"
     try {
       const response = await axios.get(
-        `https://www.googleapis.com/customsearch/v1?q=${searchTerm}&searchType=image&cx=${GOOGLE_CX}&key=${GOOGLE_API_KEY}`
+        `https://www.googleapis.com/customsearch/v1?q=${searchTerm}&searchType=image&cx=${googlecx}&key=${googleapikey}`
       );
-      const imageUrls = response.data.items.map((item: any) => item.link);  // Extract image links
-      setImages(imageUrls.slice(0, 4));  // Get the top 4 images
+      const imageUrls = response.data.items.map((item: any) => item.link); // Extract image links
+      setImages(imageUrls.slice(0, 4)); // Get the top 4 images
     } catch (error) {
       console.error('Error fetching images:', error);
     }
   };
 
-  // Run effect only once when component mounts or when habit changes
   useEffect(() => {
     fetchImages();
   }, [habit]);
 
   if (!fontsLoaded) {
-    return null; // Ensure fonts are loaded before rendering
+    return null;
   }
 
-  const handleImageSelect = (imageUrl: string) => {
-    console.log('Selected Image:', imageUrl);  // Log the selected image URL
+  // Handle selection and deselection of images
+  const toggleImageSelection = (imageUrl: string) => {
+    setSelectedImages((prev) =>
+      prev.includes(imageUrl)
+        ? prev.filter((url) => url !== imageUrl) // Deselect if already selected
+        : [...prev, imageUrl] // Select if not selected
+    );
   };
 
-  const handlePinterestLink = () => {
-    Linking.openURL('https://www.pinterest.com');  // Open Pinterest link
+  const handleUpload = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permissionResult.granted) {
+      alert('Permission to access media library is required!');
+      return;
+    }
+
+    const pickerResult = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!pickerResult.canceled && pickerResult.assets && pickerResult.assets[0].uri) {
+      setSelectedImages((prev) => [...prev, pickerResult.assets[0].uri]); // Add uploaded image to selected images
+    }
+  };
+
+  const goToFifthPage = () => {
+    navigation.navigate('FifthPage', { selectedImages, habit }); // Pass selected images and habit
   };
 
   return (
@@ -57,8 +87,17 @@ export default function FourthPage({ route }: FourthPageProps) {
       {images.length > 0 ? (
         <View style={styles.imagesContainer}>
           {images.map((imageUrl, index) => (
-            <TouchableOpacity key={index} onPress={() => handleImageSelect(imageUrl)}>
-              <Image source={{ uri: imageUrl }} style={styles.image} />
+            <TouchableOpacity
+              key={index}
+              onPress={() => toggleImageSelection(imageUrl)}
+            >
+              <Image
+                source={{ uri: imageUrl }}
+                style={[
+                  styles.image,
+                  selectedImages.includes(imageUrl) && styles.selectedImage, // Apply selected style
+                ]}
+              />
             </TouchableOpacity>
           ))}
         </View>
@@ -66,12 +105,26 @@ export default function FourthPage({ route }: FourthPageProps) {
         <Text style={styles.text}>No images found</Text>
       )}
       <Text style={styles.text}>
-        Do you want to integrate your{' '}
-        <Text style={styles.link} onPress={handlePinterestLink}>
+        Link your{' '}
+        <Text style={styles.link} onPress={() => Linking.openURL('https://www.pinterest.com')}>
           Pinterest
         </Text>{' '}
-        account?
+        account to integrate your own images and moodboards.
       </Text>
+      <Button title="Upload Image" onPress={handleUpload} />
+
+      {selectedImages.length > 0 ? (
+        <Text style={styles.text}>You selected {selectedImages.length} images</Text>
+      ) : (
+        <Text style={styles.text}>No images selected</Text>
+      )}
+
+      <TouchableOpacity style={styles.arrowButton} onPress={goToFifthPage}>
+        <Animated.View style={styles.arrowContainer}>
+          <Text style={styles.arrow}>→</Text>
+          <Text style={styles.arrowText}>Next</Text>
+        </Animated.View>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -97,7 +150,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   link: {
-    color: '#E60023',  // Pinterest red color
+    color: '#E60023',
     textDecorationLine: 'underline',
   },
   image: {
@@ -106,6 +159,31 @@ const styles = StyleSheet.create({
     margin: 10,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#fff',  // Added a white border around images
+    borderColor: '#fff',
+  },
+  selectedImage: {
+    borderColor: '#FFD700', // Gold color for selected images
+    borderWidth: 4,
+  },
+  arrowButton: {
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: '#f5efe6',
+    borderRadius: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  arrowContainer: {
+    padding: 10,
+  },
+  arrow: {
+    fontSize: 40,
+    color: '#333',
+    fontFamily: 'PlayfairDisplay_400Regular',
+  },
+  arrowText: {
+    fontSize: 24,
+    color: '#333',
+    fontFamily: 'PlayfairDisplay_400Regular',
   },
 });

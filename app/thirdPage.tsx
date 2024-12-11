@@ -10,10 +10,12 @@ type ThirdPageNavigationProp = StackNavigationProp<RootStackParamList, 'ThirdPag
 export default function ThirdPage() {
   const [habit, setHabit] = useState(''); // State to store the user input
 
+  // Load fonts
   const [fontsLoaded] = useFonts({
     PlayfairDisplay_400Regular,
   });
 
+  // Early return if fonts are not loaded
   if (!fontsLoaded) {
     return null;
   }

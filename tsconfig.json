@@ -8,9 +8,6 @@
     "paths": {
       "@/*": [
         "./*"
-      ],
-      "@env": [
-        "./react-native-dotenv.d.ts"
       ]
     }
   },
@@ -19,7 +16,6 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
-    "react-native-dotenv.d.ts",
     "src/**/*"
   ]
 }
