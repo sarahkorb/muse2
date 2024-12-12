@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   },
   songContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 10,
   },
   arrowButton: {

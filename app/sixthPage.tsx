@@ -4,6 +4,8 @@ import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from './types';  // Import the updated types
 import { BarChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+
 
 type SixthPageRouteProp = RouteProp<RootStackParamList, 'SixthPage'>;
 
@@ -22,7 +24,7 @@ export default function SixthPage({ route }: SixthPageProps) {
 
     // Simulate a week's habit logs, where 1 means the habit is done, 0 means not done.
     const [weekLogs, setWeekLogs] = useState<number[]>(new Array(7).fill(0));  // Default to no habit logged for any day
-    
+
     // Handle logging the habit
     const handleLogHabit = () => {
         if (!habitLogged) {
@@ -71,95 +73,101 @@ export default function SixthPage({ route }: SixthPageProps) {
     };
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>{habit}</Text>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
+            <View style={styles.container}>
+                <Text style={styles.title}>{habit}</Text>
 
-            <View style={styles.contentContainer}>
-                {/* Left side for images */}
-                <View style={styles.imagesContainer}>
-                    <Text style={styles.subtitle}>Inspo Images:</Text>
-                    <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
-                        {images.length > 0 ? (
-                            images.map((image, index) => (
-                                <Image
-                                    key={index}
-                                    source={{ uri: image }}
-                                    style={styles.image}
-                                />
-                            ))
-                        ) : (
-                            <Text style={styles.text}>No images found.</Text>
-                        )}
-                    </ScrollView>
+                <View style={styles.contentContainer}>
+                    {/* Left side for images */}
+                    <View style={styles.imagesContainer}>
+                        <Text style={styles.subtitle}>{habit} Inspo Images:</Text>
+                        <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
+                            {images.length > 0 ? (
+                                images.map((image, index) => (
+                                    <Image
+                                        key={index}
+                                        source={{ uri: image }}
+                                        style={styles.image}
+                                    />
+                                ))
+                            ) : (
+                                <Text style={styles.text}>Add some inspirational images!</Text>
+                            )}
+                        </ScrollView>
+                    </View>
+
+                    {/* Right side for songs */}
+                    <View style={styles.songsContainer}>
+                        <Text style={styles.subtitle}>{habit} Playlist:</Text>
+                        <TouchableOpacity style={styles.playButton} onPress={() => console.log('Play button pressed')}>
+                            <Ionicons name="play-circle" size={24} color="#1DB954" />
+                        </TouchableOpacity>
+                        <ScrollView>
+                            {selectedSongs.length > 0 ? (
+                                selectedSongs.map((song, index) => (
+                                    <View key={index} style={styles.songContainer}>
+                                        <Text style={styles.song}>
+                                            {song.songName} by {song.artistName}
+                                        </Text>
+                                    </View>
+                                ))
+                            ) : (
+                                <Text style={styles.text}>Curate a habit playlist!</Text>
+                            )}
+                        </ScrollView>
+                    </View>
                 </View>
 
-                {/* Right side for songs */}
-                <View style={styles.songsContainer}>
-                    <Text style={styles.subtitle}>Songs for your Habit:</Text>
-                    <ScrollView>
-                        {selectedSongs.length > 0 ? (
-                            selectedSongs.map((song, index) => (
-                                <View key={index} style={styles.songContainer}>
-                                    <Text style={styles.song}>
-                                        {song.songName} by {song.artistName}
-                                    </Text>
-                                </View>
-                            ))
-                        ) : (
-                            <Text style={styles.text}>No songs selected.</Text>
-                        )}
-                    </ScrollView>
-                </View>
-            </View>
-
-            {/* Weekly Dashboard Section */}
-            <View style={styles.dashboardContainer}>
-                <Text style={styles.dashboardTitle}>Your Weekly Habit Dashboard</Text>
-                <View style={styles.streakContainer}>
-                    <Text style={styles.streakText}>
-                        Streak: {streak} {streak === 1 ? 'day' : 'days'}
-                    </Text>
-                    <TouchableOpacity
-                        style={styles.logButton}
-                        onPress={handleLogHabit}
-                        disabled={habitLogged}
-                    >
-                        <Text style={styles.logButtonText}>
-                            {habitLogged ? 'Habit Logged Today' : 'Log Habit for Today'}
+                {/* Weekly Dashboard Section */}
+                <View style={styles.dashboardContainer}>
+                    <Text style={styles.dashboardTitle}>Your Weekly {habit} Dashboard</Text>
+                    <View style={styles.streakContainer}>
+                        <Text style={styles.streakText}>
+                            Streak: {streak} {streak === 1 ? 'day' : 'days'}
                         </Text>
+                        <TouchableOpacity
+                            style={styles.logButton}
+                            onPress={handleLogHabit}
+                            disabled={habitLogged}
+                        >
+                            <Text style={styles.logButtonText}>
+                                {habitLogged ? 'Habit Logged Today! :) ' : 'Log Habit for Today'}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Bar Chart */}
+                    <View style={styles.chartContainer}>
+                        <BarChart
+                            data={chartData}
+                            width={screenWidth - 40}
+                            height={220}
+                            chartConfig={chartConfig}
+                            yAxisLabel=""
+                            yAxisSuffix=""
+                            yAxisInterval={1} // Use steps of 1 for better readability
+                            fromZero={true} // Start the Y-axis at 0
+                            style={{
+                                marginVertical: 10,
+                                borderRadius: 10,
+                            }}
+                        />
+                    </View>
+
+                    <TouchableOpacity
+                        style={styles.resetButton}
+                        onPress={handleResetStreak}
+                    >
+                        <Text style={styles.resetButtonText}>Reset Streak</Text>
                     </TouchableOpacity>
                 </View>
-
-                {/* Bar Chart */}
-                <View style={styles.chartContainer}>
-                    <BarChart
-                        data={chartData}
-                        width={screenWidth - 40}
-                        height={220}
-                        chartConfig={chartConfig}
-                        yAxisLabel=""
-                        yAxisSuffix=""
-                        yAxisInterval={1} // Use steps of 1 for better readability
-                        fromZero={true} // Start the Y-axis at 0
-                        style={{
-                            marginVertical: 10,
-                            borderRadius: 10,
-                        }}
-                    />
-                </View>
-
-                <TouchableOpacity
-                    style={styles.resetButton}
-                    onPress={handleResetStreak}
-                >
-                    <Text style={styles.resetButtonText}>Reset Streak</Text>
-                </TouchableOpacity>
             </View>
-        </View>
+        </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
+
     container: {
         flex: 1,
         justifyContent: 'flex-start',
@@ -200,9 +208,12 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'flex-start',
         marginTop: 20,
+        shadowColor: '#000',
+        borderRadius: 10,
     },
     songContainer: {
         marginBottom: 10,
+        marginLeft: 20,
     },
     song: {
         fontSize: 16,
@@ -213,6 +224,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 10,
+        marginLeft: 10,
         fontFamily: 'PlayfairDisplay_400Regular',
     },
     text: {
@@ -222,8 +234,8 @@ const styles = StyleSheet.create({
         fontFamily: 'PlayfairDisplay_400Regular',
     },
     dashboardContainer: {
-        marginTop: 30,
-        padding: 15,
+        marginTop: 20,
+        padding: 10,
         backgroundColor: '#f5efe6',
         borderRadius: 10,
         width: '100%',
@@ -250,7 +262,7 @@ const styles = StyleSheet.create({
         fontFamily: 'PlayfairDisplay_400Regular',
     },
     logButton: {
-        backgroundColor: '#1DB954',
+        backgroundColor: '#87bd84',
         padding: 10,
         borderRadius: 5,
         marginBottom: 10,
@@ -270,7 +282,7 @@ const styles = StyleSheet.create({
         borderRadius: 16,
     },
     resetButton: {
-        backgroundColor: '#f44336',
+        backgroundColor: '#e66963',
         padding: 10,
         borderRadius: 5,
     },
@@ -280,4 +292,8 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontFamily: 'PlayfairDisplay_400Regular',
     },
+    playButton: {
+        marginLeft: 10,
+    }
+
 });

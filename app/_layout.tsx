@@ -21,27 +21,27 @@ export default function Layout() {
       <Stack.Screen 
         name="SecondPage" 
         component={SecondPage} 
-        options={{ title: 'Second Page' }} // Optionally set header title
+        options={{ title: ' ' }} // Optionally set header title
       />
       <Stack.Screen 
         name="ThirdPage" 
         component={ThirdPage} 
-        options={{ title: 'Third Page' }} // Optionally set header title
+        options={{ title: '' }} // Optionally set header title
       />
       <Stack.Screen 
         name="FourthPage" 
         component={FourthPage} 
-        options={{ title: 'Fourth Page' }} // Optionally set header title
+        options={{ title: '' }} // Optionally set header title
       />
       <Stack.Screen 
         name="FifthPage" 
         component={FifthPage} 
-        options={{ title: 'Fifth Page' }} // Optionally set header title
+        options={{ title: '' }} // Optionally set header title
       />
       <Stack.Screen 
         name="SixthPage" 
         component={SixthPage} 
-        options={{ title: 'Sixth Page' }} // Optionally set header title
+        options={{ title: '' }} // Optionally set header title
       />
     </Stack.Navigator>
   );
